@@ -5,6 +5,8 @@ import ClientPlayerControls from "@/components/ClientPlayerControls";
 import ZenVisualizer from "@/components/ZenVisualizer";
 import MoodSliders from "@/components/MoodSliders";
 import MoodBadge from "@/components/MoodBadge";
+import SessionJournalTracker from "@/components/SessionJournalTracker";
+
 
 
 // Pre-render (ok anche su Next 15)
@@ -57,6 +59,7 @@ export default async function ListenPage({
            <MoodBadge />
             <MoodSliders /> 
           <ZenVisualizer />
+           <SessionJournalTracker slug={slug} /> 
         </div>
       </section>
     </main>
