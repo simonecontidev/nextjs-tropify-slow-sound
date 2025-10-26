@@ -15,52 +15,51 @@ type SceneNode = {
 export class AudioEngine {
   ctx!: AudioContext;
   master!: GainNode;
+  lowpass!: BiquadFilterNode;
+  lowshelf!: BiquadFilterNode;
   analyser!: AnalyserNode;
   isReady = false;
 
   private scenes = new Map<SceneName, SceneNode>();
 
   constructor() {
-    // mappa ogni scena al suo file locale in /public/audio
-    this.scenes.set("evening-rain", {
-      url: "/audio/evening-rain.mp3",
-      loop: true,
-    } as any);
-
-    this.scenes.set("midnight-garden", {
-      url: "/audio/midnight-garden.mp3",
-      loop: true,
-    } as any);
-
-    this.scenes.set("morning-mix", {
-      url: "/audio/morning-mix.mp3",
-      loop: true,
-    } as any);
-
-    this.scenes.set("tropical-noon", {
-      url: "/audio/tropical-noon.mp3",
-      loop: true,
-    } as any);
+    // mappa scena → file locale in /public/audio
+    this.scenes.set("evening-rain", { url: "/audio/evening-rain.mp3", loop: true } as any);
+    this.scenes.set("midnight-garden", { url: "/audio/midnight-garden.mp3", loop: true } as any);
+    this.scenes.set("morning-mix", { url: "/audio/morning-mix.mp3", loop: true } as any);
+    this.scenes.set("tropical-noon", { url: "/audio/tropical-noon.mp3", loop: true } as any);
   }
 
   async init() {
     if (this.isReady) return;
 
-    this.ctx = new (window.AudioContext ||
-      (window as any).webkitAudioContext)();
+    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
 
-    // master → analyser → destination (così possiamo leggere l’energia audio)
+    // nodi principali
     this.master = this.ctx.createGain();
     this.master.gain.value = 0.0;
+
+    this.lowpass = this.ctx.createBiquadFilter();
+    this.lowpass.type = "lowpass";
+    this.lowpass.frequency.value = 16000;
+    this.lowpass.Q.value = 0.0001;
+
+    this.lowshelf = this.ctx.createBiquadFilter();
+    this.lowshelf.type = "lowshelf";
+    this.lowshelf.frequency.value = 280;
+    this.lowshelf.gain.value = 0;
 
     this.analyser = this.ctx.createAnalyser();
     this.analyser.fftSize = 256;
     this.analyser.smoothingTimeConstant = 0.85;
 
-    this.master.connect(this.analyser);
+    // catena: master → lowpass → lowshelf → analyser → destination
+    this.master.connect(this.lowpass);
+    this.lowpass.connect(this.lowshelf);
+    this.lowshelf.connect(this.analyser);
     this.analyser.connect(this.ctx.destination);
 
-    // prepara i nodi e carica i buffer per OGNI scena
+    // prepara gain e carica buffer per ogni scena
     for (const [name, scene] of this.scenes) {
       const g = this.ctx.createGain();
       g.gain.value = 0.0;
@@ -82,45 +81,42 @@ export class AudioEngine {
     return this.analyser ?? null;
   }
 
-  private async loadBuffer(url: string) {
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
-    const arr = await res.arrayBuffer();
-    // slice(0) evita problemi su Safari con ArrayBuffer detatched
-    return await this.ctx.decodeAudioData(arr.slice(0));
-  }
-
-  private startScene(name: SceneName) {
-    const scene = this.scenes.get(name)!;
-    if (!scene.buffer) return;
-
-    try { scene.source?.stop(); } catch {}
-    scene.source?.disconnect();
-
-    const src = this.ctx.createBufferSource();
-    src.buffer = scene.buffer;
-    src.loop = scene.loop;
-
-    // piccolo offset random per evitare sempre lo stesso inizio
-    const offset = Math.max(0, Math.random() * (scene.buffer.duration - 0.25));
-    src.connect(scene.gain);
-    try { src.start(0, offset); } catch {}
-
-    scene.source = src;
-  }
-
-  private fadeParam(param: AudioParam, to: number, dur = 0.8) {
-    const t = this.ctx.currentTime;
-    param.cancelScheduledValues(t);
-    param.setTargetAtTime(to, t, Math.max(0.001, dur / 4));
-  }
-
   async resume() {
-    if (this.ctx.state !== "running") await this.ctx.resume();
+    if (this.ctx?.state !== "running") {
+      await this.ctx.resume();
+    }
   }
 
   async suspend() {
-    if (this.ctx.state === "running") await this.ctx.suspend();
+    if (this.ctx?.state === "running") {
+      await this.ctx.suspend();
+    }
+  }
+
+  /** Intensity 0..1 → master gain (fade morbido) */
+  setIntensity(v: number) {
+    const val = clamp01(v);
+    this.fadeParam(this.master.gain, val, 0.25);
+  }
+
+  /** Calm 0..1 → lowpass 16k → ~800 Hz */
+  setCalm(v: number) {
+    const x = clamp01(v);
+    const from = 16000;
+    const to = 800;
+    const cutoff = from + (to - from) * x;
+    const t = this.ctx.currentTime;
+    this.lowpass.frequency.cancelScheduledValues(t);
+    this.lowpass.frequency.setTargetAtTime(cutoff, t, 0.03);
+  }
+
+  /** Nature 0..1 → low-shelf -2..+6 dB */
+  setNature(v: number) {
+    const x = clamp01(v);
+    const db = -2 + 8 * x;
+    const t = this.ctx.currentTime;
+    this.lowshelf.gain.cancelScheduledValues(t);
+    this.lowshelf.gain.setTargetAtTime(db, t, 0.05);
   }
 
   /** Crossfade: porta a 0 tutte le scene e fai fade-in di quella scelta; alza il master */
@@ -138,7 +134,7 @@ export class AudioEngine {
     this.fadeParam(this.master.gain, master, 1.2);
   }
 
-  /** Fade-out del master (lascia le scene pronte per riprendere) */
+  /** Fade-out del master (scene pronte a riprendere) */
   pauseAll() {
     this.fadeParam(this.master.gain, 0.0, 0.8);
   }
@@ -150,8 +146,47 @@ export class AudioEngine {
       try { scene.gain.disconnect(); } catch {}
     }
     try { this.analyser.disconnect(); } catch {}
+    try { this.lowshelf.disconnect(); } catch {}
+    try { this.lowpass.disconnect(); } catch {}
     try { this.master.disconnect(); } catch {}
     try { this.ctx.close(); } catch {}
     this.isReady = false;
   }
+
+  // ==== helpers ====
+
+  private async loadBuffer(url: string) {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Failed to fetch ${url}`);
+    const arr = await res.arrayBuffer();
+    return await this.ctx.decodeAudioData(arr.slice(0));
+  }
+
+  private startScene(name: SceneName) {
+    const scene = this.scenes.get(name)!;
+    if (!scene.buffer) return;
+
+    try { scene.source?.stop(); } catch {}
+    scene.source?.disconnect();
+
+    const src = this.ctx.createBufferSource();
+    src.buffer = scene.buffer;
+    src.loop = true;
+
+    const offset = Math.max(0, Math.random() * (scene.buffer.duration - 0.25));
+    src.connect(scene.gain);
+    try { src.start(0, offset); } catch {}
+
+    scene.source = src;
+  }
+
+  private fadeParam(param: AudioParam, to: number, dur = 0.8) {
+    const t = this.ctx.currentTime;
+    param.cancelScheduledValues(t);
+    param.setTargetAtTime(to, t, Math.max(0.001, dur / 4));
+  }
+}
+
+function clamp01(v: number) {
+  return Math.max(0, Math.min(1, v));
 }

@@ -5,6 +5,15 @@
   --foreground: #171717;
 }
 
+:root {
+  --page-bg: #0a0a0a; /* fallback scuro */
+}
+
+/* transizione morbida dello sfondo su tutta la pagina */
+html, body, main {
+  transition: background-color 400ms ease;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
