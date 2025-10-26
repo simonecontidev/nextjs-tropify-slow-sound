@@ -15,7 +15,11 @@ import type {
 } from "@/lib/audio/types";
 import { AudioEngine, type SceneName } from "@/lib/audio/engine";
 
-const Ctx = createContext<AudioContextValue | null>(null);
+type AudioContextValueExtended = AudioContextValue & {
+  getAnalyser: () => AnalyserNode | null; // ⤴️ nuovo
+};
+
+const Ctx = createContext<AudioContextValueExtended | null>(null);
 
 export function AudioProvider({ children }: { children: ReactNode }) {
   const engineRef = useRef<AudioEngine | null>(null);
@@ -28,49 +32,50 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return engineRef.current;
   };
 
-  const value = useMemo<AudioContextValue>(() => {
+  const value = useMemo<AudioContextValueExtended>(() => {
     return {
       status,
       current,
 
-      // Prepara l'engine (crea AudioContext, carica buffer)
       init: async () => {
         const eng = ensureEngine();
         await eng.init();
         setStatus("ready");
       },
 
-      // Avvia la scena corrente (slug ↔ file) con fade-in morbido
       play: async (scene?: SceneRef) => {
         const eng = ensureEngine();
         await eng.init();
         await eng.resume();
 
         if (scene) setCurrent(scene);
-
         const slug = (scene?.slug || current?.slug || "evening-rain") as SceneName;
         eng.playSlug(slug, 0.85);
         setStatus("playing");
       },
 
-      // Fade-out master e sospensione del context
       pause: async () => {
         const eng = ensureEngine();
         eng.pauseAll();
-        // sospendi dopo il fade per evitare tagli
         setTimeout(() => {
           eng.suspend();
           setStatus("paused");
         }, 900);
       },
 
-      // Aggiorna solo lo stato locale della scena (utile per UI)
       setScene: (scene: SceneRef) => {
         setCurrent(scene);
-        // Se vuoi fare switch immediato:
-        // const eng = ensureEngine();
-        // eng.playSlug(scene.slug as SceneName, 0.85);
-        // setStatus("playing");
+      },
+
+      // ⤵️ bridge per il visualizer
+      getAnalyser: () => {
+        try {
+          const eng = ensureEngine();
+          // se non inizializzato, torna null: chi usa l’hook gestirà
+          return eng.getAnalyser?.() ?? null;
+        } catch {
+          return null;
+        }
       },
     };
   }, [status, current]);

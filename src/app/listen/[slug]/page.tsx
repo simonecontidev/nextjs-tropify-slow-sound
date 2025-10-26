@@ -2,20 +2,34 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MOMENTS, getMoment, type Moment } from "@/data/moments";
 import ClientPlayerControls from "@/components/ClientPlayerControls";
+import ZenVisualizer from "@/components/ZenVisualizer";
 
+// Pre-render (ok anche su Next 15)
 export async function generateStaticParams() {
   return MOMENTS.map((m) => ({ slug: m.slug }));
 }
 
-export function generateMetadata({ params }: { params: { slug: Moment["slug"] } }) {
-  const m = getMoment(params.slug);
-  const title = m ? `${m.title} — Tropify` : "Tropify — The Slow Sound Garden";
-  const description = m?.subtitle ?? "A serene, tropical slow-sound experience.";
-  return { title, description };
+// Anche qui: params è una Promise
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: Moment["slug"] }>;
+}) {
+  const { slug } = await params;
+  const m = getMoment(slug);
+  return {
+    title: m ? `${m.title} — Tropify` : "Tropify — The Slow Sound Garden",
+    description: m?.subtitle ?? "A serene, tropical slow-sound experience.",
+  };
 }
 
-export default function AudioPage({ params }: { params: { slug: Moment["slug"] } }) {
-  const moment = getMoment(params.slug);
+export default async function ListenPage({
+  params,
+}: {
+  params: Promise<{ slug: Moment["slug"] }>;
+}) {
+  const { slug } = await params; // ✅ importantissimo
+  const moment = getMoment(slug);
   if (!moment) return notFound();
 
   return (
@@ -36,7 +50,8 @@ export default function AudioPage({ params }: { params: { slug: Moment["slug"] }
         <p className="mt-2 text-neutral-300">{moment.subtitle}</p>
 
         <div className="mt-8 rounded-2xl border border-neutral-800/60 bg-neutral-900/40 p-5">
-          <ClientPlayerControls slug={params.slug} />
+          <ClientPlayerControls slug={slug} />
+          <ZenVisualizer />
         </div>
       </section>
     </main>

@@ -6,10 +6,7 @@ import { gsap } from "gsap";
 import type { Moment } from "@/data/moments";
 import { useAudio } from "@/contexts/AudioProvider";
 
-type Props = {
-  moment: Moment;
-  delay?: number; // per un leggero stagger
-};
+type Props = { moment: Moment; delay?: number };
 
 export default function MomentCard({ moment, delay = 0 }: Props) {
   const ref = useRef<HTMLDivElement>(null);
@@ -31,52 +28,39 @@ export default function MomentCard({ moment, delay = 0 }: Props) {
   const isPlaying = audio.status === "playing" && isCurrent;
 
   const handlePreview = async (e: React.MouseEvent) => {
-    // Evita che il click sul bottone attivi il link della card
     e.preventDefault();
     e.stopPropagation();
-
     await audio.init();
-
-    if (isPlaying) {
-      audio.pause();
-      return;
-    }
-
-    audio.play({
-      slug: moment.slug,
-      params: { intensity: 0.5, calm: 0.7, nature: 0.6 },
-    });
+    if (isPlaying) return audio.pause();
+    audio.play({ slug: moment.slug, params: { intensity: 0.5, calm: 0.7, nature: 0.6 } });
   };
 
   return (
-    <div
-      ref={ref}
-      className="group rounded-2xl border border-neutral-800/60 bg-neutral-900/40 p-5 transition-colors hover:border-neutral-700 focus-within:ring-2 focus-within:ring-emerald-400"
+    <Link
+      href={`/listen/${moment.slug}`}
+      className="group block rounded-2xl border border-neutral-800/60 bg-neutral-900/40 p-5 transition-colors hover:border-neutral-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+      ref={ref as any}
     >
-      <div className="flex items-center justify-between gap-3">
-        <Link
-          href={`/audio/${moment.slug}`}
-          className="min-w-0 flex-1 focus:outline-none"
-        >
+      <div className="flex items-center justify-between">
+        <div className="min-w-0">
           <h3 className="text-xl font-medium tracking-tight">{moment.title}</h3>
           <p className="mt-1 text-sm text-neutral-400">{moment.subtitle}</p>
-        </Link>
-
+        </div>
         <button
           onClick={handlePreview}
-          className="shrink-0 rounded-full border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
+          className="shrink-0 rounded-full border border-neutral-700 px-3 py-1.5 text-sm text-neutral-200 hover:bg-neutral-800"
           aria-pressed={isPlaying}
           title={isPlaying ? "Pause preview" : "Play preview"}
+          type="button"
         >
           {isPlaying ? "❚❚" : "▶︎"}
         </button>
       </div>
-
       {isCurrent && (
         <div className="mt-3 text-xs text-emerald-300/80">
           {isPlaying ? "Preview playing…" : "Preview paused"}
         </div>
       )}
-    </div>
+    </Link>
   );
 }
