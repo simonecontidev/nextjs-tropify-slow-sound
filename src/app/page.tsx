@@ -1,3 +1,4 @@
+import Link from "next/link";
 import Breathing from "@/components/Breathing";
 
 export default function Home() {
@@ -10,6 +11,15 @@ export default function Home() {
         <p className="mt-4 text-neutral-300">
           Enter. Breathe. Let sound grow slowly.
         </p>
+
+        <div className="mt-6">
+          <Link
+            href="/moment"
+            className="inline-flex items-center rounded-full border border-neutral-800/60 bg-neutral-900/40 px-4 py-2 text-sm text-neutral-200 hover:border-neutral-700"
+          >
+            Choose a Moment →
+          </Link>
+        </div>
       </section>
 
       <Breathing />

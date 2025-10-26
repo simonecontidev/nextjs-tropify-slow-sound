@@ -26,3 +26,6 @@ export const MOMENTS: Moment[] = [
     subtitle: "night air • quiet chorus • stars",
   },
 ];
+
+export const getMoment = (slug: Moment["slug"]) =>
+  MOMENTS.find((m) => m.slug === slug);
