@@ -46,7 +46,7 @@ export default function Header() {
       </a>
       <div className="mx-auto flex h-14 max-w-5xl items-center justify-between px-4">
         <Link href="/" className="font-medium tracking-tight text-neutral-200 hover:text-neutral-50">
-          Tropify<span className="text-neutral-400">/</span><span className="text-neutral-300">Zen</span>
+          Tropify<span className="text-neutral-400"> - </span><span className="text-neutral-300">The Slow Sound Garden</span>
         </Link>
 
         <nav aria-label="Primary">
