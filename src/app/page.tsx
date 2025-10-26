@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Breathing from "@/components/Breathing";
+import HeroQuotes from "@/components/HeroQuotes";
+
 
 export default function Home() {
   return (
@@ -22,7 +24,8 @@ export default function Home() {
         </div>
       </section>
 
-      <Breathing />
+      <Breathing speed={1.25} />
+      <HeroQuotes />
 
       <footer className="pb-16 text-center text-sm text-neutral-500">
         Press &amp; hold, tap softly, or simply be still.

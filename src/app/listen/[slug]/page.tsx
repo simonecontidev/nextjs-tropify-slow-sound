@@ -6,8 +6,7 @@ import ZenVisualizer from "@/components/ZenVisualizer";
 import MoodSliders from "@/components/MoodSliders";
 import MoodBadge from "@/components/MoodBadge";
 import SessionJournalTracker from "@/components/SessionJournalTracker";
-
-
+import ListenQuote from "@/components/ListenQuote";
 
 // Pre-render (ok anche su Next 15)
 export async function generateStaticParams() {
@@ -33,12 +32,15 @@ export default async function ListenPage({
 }: {
   params: Promise<{ slug: Moment["slug"] }>;
 }) {
-  const { slug } = await params; 
+  const { slug } = await params;
   const moment = getMoment(slug);
   if (!moment) return notFound();
 
   return (
-    <main className="min-h-screen text-neutral-50" style={{ backgroundColor: "var(--page-bg)" }}>
+    <main
+      className="min-h-screen text-neutral-50"
+      style={{ backgroundColor: "var(--page-bg)" }}
+    >
       <section className="mx-auto max-w-3xl px-6 pt-24">
         <div className="flex items-center justify-between gap-4">
           <h1 className="text-2xl md:text-4xl font-medium tracking-tight">
@@ -56,10 +58,14 @@ export default async function ListenPage({
 
         <div className="mt-8 rounded-2xl border border-neutral-800/60 bg-neutral-900/40 p-5">
           <ClientPlayerControls slug={slug} />
-           <MoodBadge />
-            <MoodSliders /> 
+          <MoodBadge />
+          <MoodSliders />
           <ZenVisualizer />
-           <SessionJournalTracker slug={slug} /> 
+
+          {/* 👇 Frase ispirazionale dinamica */}
+          <ListenQuote />
+
+          <SessionJournalTracker slug={slug} />
         </div>
       </section>
     </main>

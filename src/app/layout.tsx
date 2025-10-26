@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { AudioProvider } from "@/contexts/AudioProvider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import RouteTransition from "@/components/RouteTransition";
+
 
 export const metadata: Metadata = {
   title: "Tropify — The Slow Sound Garden",
@@ -19,6 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       >
         <AudioProvider>
           <Header />
+          <RouteTransition /> 
           <main id="main">{children}</main>
           <Footer />
         </AudioProvider>
