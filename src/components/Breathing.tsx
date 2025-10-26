@@ -1,20 +1,29 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 import { gsap } from "gsap";
 
 export default function Breathing() {
   const ref = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!ref.current) return;
+  useLayoutEffect(() => {
+    // Crea un contesto GSAP che si ripulisce correttamente con React 18 StrictMode
+    const ctx = gsap.context(() => {
+      if (!ref.current) return;
 
-    const tl = gsap.timeline({ repeat: -1, yoyo: true });
-    tl.to(ref.current, { scale: 1.06, duration: 6, ease: "sine.inOut" });
+      gsap.set(ref.current, { transformOrigin: "50% 50%" });
 
-    // Cleanup function senza return value
+      gsap.timeline({ repeat: -1, yoyo: true })
+        .to(ref.current, {
+          scale: 1.06,
+          duration: 6,
+          ease: "sine.inOut",
+          force3D: true,
+        });
+    });
+
     return () => {
-      tl.kill();
+      ctx.revert(); // cleanup sicuro
     };
   }, []);
 
@@ -23,7 +32,7 @@ export default function Breathing() {
       <div
         ref={ref}
         aria-hidden="true"
-        className="h-40 w-40 rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/40 shadow-inner"
+        className="h-40 w-40 rounded-full bg-emerald-500/20 ring-1 ring-emerald-400/40 shadow-inner will-change-transform"
       />
     </div>
   );
