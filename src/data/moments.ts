@@ -1,20 +1,10 @@
 export type Moment = {
-  slug: "morning-mist" | "tropical-noon" | "evening-rain" | "midnight-garden";
+  slug: "evening-rain" | "midnight-garden" | "morning-mix" | "tropical-noon";
   title: string;
   subtitle: string;
 };
 
 export const MOMENTS: Moment[] = [
-  {
-    slug: "morning-mist",
-    title: "Morning Mist",
-    subtitle: "dawn light • soft leaves • distant water",
-  },
-  {
-    slug: "tropical-noon",
-    title: "Tropical Noon",
-    subtitle: "warm breeze • cicadas • shallow waves",
-  },
   {
     slug: "evening-rain",
     title: "Evening Rain",
@@ -24,6 +14,16 @@ export const MOMENTS: Moment[] = [
     slug: "midnight-garden",
     title: "Midnight Garden",
     subtitle: "night air • quiet chorus • stars",
+  },
+  {
+    slug: "morning-mix",
+    title: "Morning Mix",
+    subtitle: "dawn light • soft leaves • distant water",
+  },
+  {
+    slug: "tropical-noon",
+    title: "Tropical Noon",
+    subtitle: "warm breeze • cicadas • shallow waves",
   },
 ];
 

@@ -1,14 +1,15 @@
-export type LayerName = "rain" | "waves" | "leaves";
+export type SceneName =
+  | "evening-rain"
+  | "midnight-garden"
+  | "morning-mix"
+  | "tropical-noon";
 
-type LayerNodes = {
+type SceneNode = {
   source?: AudioBufferSourceNode;
   buffer?: AudioBuffer;
-  gain: GainNode;
-  pan: StereoPannerNode;
+  gain: GainNode; // gain per la singola scena
   url: string;
   loop: boolean;
-  loopStart?: number;
-  loopEnd?: number;
 };
 
 export class AudioEngine {
@@ -16,45 +17,54 @@ export class AudioEngine {
   master!: GainNode;
   isReady = false;
 
-  private layers = new Map<LayerName, LayerNodes>();
+  private scenes = new Map<SceneName, SceneNode>();
 
   constructor() {
+    // Mappa ogni scena al suo file in /public/audio
+    this.scenes.set("evening-rain", {
+      url: "/audio/evening-rain.mp3",
+      loop: true,
+      // gain e buffer verranno creati in init()
+    } as any);
 
-    this.layers.set("rain",   { url: "/public/audio/evening-rain.mp3",   loop: true } as any);
-    this.layers.set("waves",  { url: "//public/audio/morning-mix.mp3",  loop: true } as any);
-    this.layers.set("leaves", { url: "/public/audio/morning-mix.mp3", loop: true } as any);
+    this.scenes.set("midnight-garden", {
+      url: "/audio/midnight-garden.mp3",
+      loop: true,
+    } as any);
+
+    this.scenes.set("morning-mix", {
+      url: "/audio/morning-mix.mp3",
+      loop: true,
+    } as any);
+
+    this.scenes.set("tropical-noon", {
+      url: "/audio/tropical-noon.mp3",
+      loop: true,
+    } as any);
   }
 
   async init() {
     if (this.isReady) return;
 
-    // AudioContext (creato al primo gesto utente)
-    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    this.ctx = new (window.AudioContext ||
+      (window as any).webkitAudioContext)();
 
-    // Master gain
     this.master = this.ctx.createGain();
     this.master.gain.value = 0.0; // parte in silenzio
     this.master.connect(this.ctx.destination);
 
-    // Prepara nodi + carica buffer per ogni layer
-    for (const [name, meta] of this.layers) {
+    // prepara i nodi e carica i buffer per OGNI scena
+    for (const [name, scene] of this.scenes) {
       const gain = this.ctx.createGain();
       gain.gain.value = 0.0;
-
-      const pan = this.ctx.createStereoPanner();
-      pan.pan.value = 0;
-
-      pan.connect(gain);
       gain.connect(this.master);
-
-      meta.gain = gain;
-      meta.pan = pan;
+      scene.gain = gain;
 
       try {
-        meta.buffer = await this.loadBuffer(meta.url);
+        scene.buffer = await this.loadBuffer(scene.url);
       } catch (e) {
-        console.warn(`[AudioEngine] Failed to load ${name} from ${meta.url}`, e);
-        meta.buffer = undefined; // il layer rimarrà muto
+        console.warn(`[AudioEngine] Failed to load ${name} from ${scene.url}`, e);
+        scene.buffer = undefined;
       }
     }
 
@@ -65,38 +75,33 @@ export class AudioEngine {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`Failed to fetch ${url}`);
     const arr = await res.arrayBuffer();
-    // Safari fix: usare slice(0) per avere un ArrayBuffer “detached”-safe
     return await this.ctx.decodeAudioData(arr.slice(0));
   }
 
-  private startLayer(name: LayerName) {
-    const meta = this.layers.get(name)!;
-    if (!meta.buffer) return; // niente da suonare
+  private startScene(name: SceneName) {
+    const scene = this.scenes.get(name)!;
+    if (!scene.buffer) return; // nessun audio da suonare
 
-    // Stoppa eventuale source precedente
-    try { meta.source?.stop(); } catch {}
-    meta.source?.disconnect();
+    // ferma eventuale source precedente
+    try { scene.source?.stop(); } catch {}
+    scene.source?.disconnect();
 
-    // Crea un nuovo BufferSource
     const src = this.ctx.createBufferSource();
-    src.buffer = meta.buffer;
-    src.loop = meta.loop;
-    if (meta.loopStart != null) src.loopStart = meta.loopStart;
-    if (meta.loopEnd != null) src.loopEnd = meta.loopEnd;
+    src.buffer = scene.buffer;
+    src.loop = scene.loop;
 
-    // Suggerimento: partire con un offset casuale per evitare pattern identici ad ogni play
-    const offset = Math.random() * (meta.buffer.duration - 0.25);
+    // piccola randomizzazione per evitare che inizi sempre allo stesso punto
+    const offset = Math.random() * (scene.buffer.duration - 0.25);
 
-    src.connect(meta.pan);
+    src.connect(scene.gain);
     try { src.start(0, offset); } catch {}
 
-    meta.source = src;
+    scene.source = src;
   }
 
   private fadeParam(param: AudioParam, to: number, dur = 0.8) {
     const t = this.ctx.currentTime;
     param.cancelScheduledValues(t);
-    // setTargetAtTime produce una curva esponenziale morbida
     param.setTargetAtTime(to, t, dur / 4);
   }
 
@@ -108,35 +113,34 @@ export class AudioEngine {
     if (this.ctx.state === "running") await this.ctx.suspend();
   }
 
-  /** Imposta i livelli dei layer (0..1) e il master, con fade morbidi */
-  playScene(levels: Partial<Record<LayerName, number>> = {}, master = 0.8) {
-    (["rain", "waves", "leaves"] as LayerName[]).forEach((n) => {
-      const meta = this.layers.get(n)!;
-      // Avvia il layer se non c'è un source attivo
-      if (!meta.source && meta.buffer) this.startLayer(n);
-      const target = levels[n] ?? 0.0;
-      this.fadeParam(meta.gain.gain, target, 1.0);
+  /** Riproduci una scena: fade-in della scena scelta e fade-out delle altre */
+  playSlug(slug: SceneName, master = 0.85) {
+    // assicura che tutte le scene abbiano un source attivo (per crossfade immediato)
+    (Array.from(this.scenes.keys()) as SceneName[]).forEach((n) => {
+      const s = this.scenes.get(n)!;
+      if (!s.source && s.buffer) this.startScene(n);
+      // fade out default
+      this.fadeParam(s.gain.gain, 0.0, 1.0);
     });
 
+    // fade in della scena selezionata
+    const target = this.scenes.get(slug)!;
+    this.fadeParam(target.gain.gain, 1.0, 1.0);
+
+    // master su
     this.fadeParam(this.master.gain, master, 1.2);
   }
 
-  /** Fade-out del master; i layer restano pronti per riprendere */
-  pauseScene() {
+  /** Fade-out del master */
+  pauseAll() {
     this.fadeParam(this.master.gain, 0.0, 0.8);
   }
 
-  setLayerPan(name: LayerName, pan: number) {
-    const meta = this.layers.get(name)!;
-    this.fadeParam(meta.pan.pan, Math.max(-1, Math.min(1, pan)), 0.5);
-  }
-
   dispose() {
-    for (const [, meta] of this.layers) {
-      try { meta.source?.stop(); } catch {}
-      try { meta.source?.disconnect(); } catch {}
-      try { meta.gain.disconnect(); } catch {}
-      try { meta.pan.disconnect(); } catch {}
+    for (const [, scene] of this.scenes) {
+      try { scene.source?.stop(); } catch {}
+      try { scene.source?.disconnect(); } catch {}
+      try { scene.gain.disconnect(); } catch {}
     }
     try { this.master.disconnect(); } catch {}
     try { this.ctx.close(); } catch {}
