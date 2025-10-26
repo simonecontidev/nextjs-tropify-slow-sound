@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { MOMENTS, getMoment, type Moment } from "@/data/moments";
+import { useAudio } from "@/contexts/AudioProvider";
 
-type Props = {
-  params: { slug: Moment["slug"] };
-};
+type Props = { params: { slug: Moment["slug"] } };
 
 export async function generateStaticParams() {
   return MOMENTS.map((m) => ({ slug: m.slug }));
@@ -17,6 +16,46 @@ export function generateMetadata({ params }: Props) {
       ? `${moment.title} — Tropify`
       : "Tropify — The Slow Sound Garden",
   };
+}
+
+function PlayerControls({ slug }: { slug: string }) {
+  const audio = useAudio();
+
+  const handlePlay = () => {
+    audio.init(); // prepara (no-op per ora)
+    audio.play({
+      slug,
+      params: { intensity: 0.4, calm: 0.7, nature: 0.6 },
+    });
+  };
+
+  const handlePause = () => {
+    audio.pause();
+  };
+
+  const isPlaying = audio.status === "playing";
+
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        onClick={handlePlay}
+        className="rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
+        aria-pressed={isPlaying}
+      >
+        ▶︎ {isPlaying ? "Playing" : "Play"}
+      </button>
+      <button
+        onClick={handlePause}
+        className="rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
+        disabled={!isPlaying}
+      >
+        ❚❚ Pause
+      </button>
+      <span className="ml-2 text-xs text-neutral-500">
+        status: {audio.status}
+      </span>
+    </div>
+  );
 }
 
 export default function PlayPage({ params }: Props) {
@@ -39,29 +78,8 @@ export default function PlayPage({ params }: Props) {
         </div>
         <p className="mt-2 text-neutral-300">{moment.subtitle}</p>
 
-        {/* Placeholder player: i controlli verranno collegati all'audio engine */}
         <div className="mt-8 rounded-2xl border border-neutral-800/60 bg-neutral-900/40 p-5">
-          <div className="flex items-center gap-3">
-            <button
-              className="rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
-              disabled
-              aria-disabled="true"
-              title="Coming soon"
-            >
-              ▶︎ Play
-            </button>
-            <button
-              className="rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
-              disabled
-              aria-disabled="true"
-              title="Coming soon"
-            >
-              ❚❚ Pause
-            </button>
-            <span className="ml-2 text-xs text-neutral-500">
-              (audio engine coming next)
-            </span>
-          </div>
+          <PlayerControls slug={params.slug} />
         </div>
       </section>
     </main>
