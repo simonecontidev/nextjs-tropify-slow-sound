@@ -16,7 +16,7 @@ export default function HeroQuotes() {
   useEffect(() => {
     const tl = gsap.timeline({ repeat: -1 });
     tl.to({}, { duration: 10, onComplete: () => setIndex((i) => (i + 1) % QUOTES.length) });
-    return () => tl.kill();
+    return () => { tl.kill(); }; 
   }, []);
 
   useEffect(() => {

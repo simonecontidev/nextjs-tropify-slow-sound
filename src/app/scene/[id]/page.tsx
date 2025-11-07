@@ -1,8 +1,14 @@
-export default function SceneTest({ params }: { params: { id: string } }) {
+// src/app/scene/[id]/page.tsx
+export default async function ScenePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params; 
+
   return (
-    <main style={{padding:24,color:"#e5e7eb",background:"#0a0a0a",minHeight:"100vh"}}>
-      <h1 style={{fontSize:24,marginBottom:8}}>Scene (test)</h1>
-      <p>id: <code>{params.id}</code></p>
+    <main style={{ padding: 24 }}>
+      <h1>Scene #{id}</h1>
     </main>
   );
 }

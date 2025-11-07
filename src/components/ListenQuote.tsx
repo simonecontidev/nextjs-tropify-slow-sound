@@ -20,7 +20,7 @@ const QUOTES = {
     "Let the pulse move through you, not against you.",
     "Energy and peace are two names of the same breath.",
   ],
-};
+} as const;
 
 export default function ListenQuote() {
   const { calm = 0 } = useAudio();
@@ -41,7 +41,9 @@ export default function ListenQuote() {
   useEffect(() => {
     const tl = gsap.timeline({ repeat: -1 });
     tl.to({}, { duration: 7, onComplete: () => setIndex((i) => i + 1) });
-    return () => tl.kill();
+
+    // ✅ cleanup deve restituire void, non un Timeline
+    return () => { tl.kill(); };
   }, []);
 
   const quoteList = QUOTES[category];
@@ -65,14 +67,19 @@ export default function ListenQuote() {
     );
 
     // respiro continuo (scale + letterSpacing)
-    const tl = gsap.timeline({ repeat: -1, yoyo: true, defaults: { ease: "sine.inOut" } });
+    const tl = gsap.timeline({
+      repeat: -1,
+      yoyo: true,
+      defaults: { ease: "sine.inOut" },
+    });
     tl.to(ref.current, {
       scale: 1.02,
       letterSpacing: "0.05em",
       duration: 4,
     });
 
-    return () => tl.kill();
+    // ✅ cleanup void
+    return () => { tl.kill(); };
   }, [q]);
 
   return (
