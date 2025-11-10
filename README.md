@@ -90,7 +90,8 @@ tropify/
 └── styles/
     └── globals.css
 
-    ---
+---
+
 
 ###  Design Philosophy
 
