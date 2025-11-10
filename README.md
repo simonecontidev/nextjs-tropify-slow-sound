@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🌴 Tropify — Experiential Web App
 
-## Getting Started
+[![Next.js](https://img.shields.io/badge/Next.js-16.0-black?logo=next.js)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![GSAP](https://img.shields.io/badge/GSAP-3.12-green?logo=greensock)](https://greensock.com/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-38B2AC?logo=tailwindcss)](https://tailwindcss.com/)
+[![Framer Motion](https://img.shields.io/badge/Framer%20Motion-11.0-EF007B?logo=framer)](https://www.framer.com/motion/)
+[![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?logo=vercel)](https://vercel.com)
 
-First, run the development server:
+---
+
+### 🎧 Overview
+
+**Tropify** is a **slow-web experience** blending sound, motion, and interaction into a meditative digital journey.  
+Built with **Next.js 16 + GSAP + Tailwind**, it transforms scrolling and navigation into a sensory flow — where each scene unfolds like a tropical soundscape.
+
+This project explores the idea of *web as experience*, not interface — balancing performance, visual storytelling, and poetic minimalism.
+
+---
+
+### 🧩 Tech Stack
+
+| Layer | Technologies |
+|-------|---------------|
+| **Framework** | Next.js 16 (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS + CSS Modules |
+| **Animations** | GSAP + ScrollTrigger + Framer Motion |
+| **Smooth Scroll** | Lenis |
+| **Deployment** | Vercel |
+| **Design System** | Minimal, nature-inspired palette and typography |
+
+---
+
+### ✨ Features
+
+- 🎞️ **Scene-based storytelling** — Each section acts as a self-contained “scene” with ambient sound and motion.  
+- 🌊 **Scroll-triggered animations** — Layered GSAP reveals and parallax transitions.  
+- 🎚️ **Sound integration** — Background audio synced with visual states.  
+- 💨 **Lenis smooth scrolling** — Adds organic motion dynamics to transitions.  
+- 🌓 **Responsive & performant** — Optimized for desktop and tablet, with adaptive motion reduction.  
+- 🔁 **Static export support** — Deployed as a fully static site for maximum speed and portability.  
+
+---
+
+### 🧠 UX & Creative Direction
+
+Tropify was designed as a **“digital breathing space”** — minimal UI, immersive scroll, fluid rhythm.  
+The interface fades away to let light, sound, and color tell the story.  
+Every transition is crafted to evoke **calm, curiosity, and flow**.
+
+---
+
+### 🚀 Getting Started
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/simoneconti-dev/tropify.git
+
+# 2. Move into the project folder
+cd tropify
+
+# 3. Install dependencies
+npm install
+
+# 4. Run the local development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# 5. Open in your browser
+http://localhost:3000
 ```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Folder Structure
+tropify/
+├── app/
+│   ├── layout.tsx
+│   ├── page.tsx
+│   └── scene/[id]/page.tsx
+├── components/
+│   ├── Scene.tsx
+│   ├── ScrollTriggerWrapper.tsx
+│   └── AudioController.tsx
+├── lib/
+│   ├── animations/
+│   └── hooks/
+├── public/
+│   ├── sounds/
+│   └── images/
+└── styles/
+    └── globals.css
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+    ---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+###  Design Philosophy
 
-## Learn More
+“The web can be more than functional — it can be emotional.”
 
-To learn more about Next.js, take a look at the following resources:
+	•	Focus: immersion > interaction
+	•	Aesthetic: tropical minimalism, soft gradients, slow transitions
+	•	Goal: evoke presence through digital motion
+	•	Tone: calm, poetic, meditative
+	•	Influence: nature, ocean movement, time perception
+###  License
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+This project is open-source under the MIT License.
+You’re free to use, modify, and adapt it with attribution.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+“Tropify invites you to slow down — one scroll at a time.” 🌴
+  
