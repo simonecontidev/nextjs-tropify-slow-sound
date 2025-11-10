@@ -16,6 +16,14 @@ Built with **Next.js 16 + GSAP + Tailwind**, it transforms scrolling and navigat
 
 This project explores the idea of *web as experience*, not interface — balancing performance, visual storytelling, and poetic minimalism.
 
+App Router with fluid route transitions, no layout shifts, and rich motion design.
+Tropify explores the concept of ‘slow web’ through an experiential interface where motion, sound, and interaction create a sense of presence rather than speed.
+Built with Next.js App Router, GSAP, and custom WebAudio hooks, it synchronizes smooth page transitions, ambient sound layers, and scroll-linked animations without layout shifts.
+Optimized with lazy-loaded components and GPU-accelerated transitions, the app maintains sub-100ms input latency while delivering a cinematic, multi-sensory UX across devices. Composable GSAP + WebAudio hooks to craft a sensory, low-latency UX.
+
+🌴 [Live Demo](https://tropify.simoneconti.work/) 
+
+
 ---
 
 ### 🧩 Tech Stack
